@@ -121,7 +121,7 @@
         });
 
         document.getElementById('terminate-button').addEventListener('click', function() {
-            const ws = new WebSocket('ws://localhost:1883/ws');
+            const ws = new WebSocket('ws://0.0.0.0:1883/ws');
 
             ws.onopen = function() {
                 const consoleDiv = document.getElementById('console');
