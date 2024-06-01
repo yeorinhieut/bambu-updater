@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test HTTP Request</title>
+</head>
+<body>
+    <h1>Test HTTP Request</h1>
+    <button id="send-request">Send HTTP Request</button>
+    <p id="response"></p>
+
+    <script>
+        document.getElementById('send-request').addEventListener('click', function() {
+            fetch('http://127.0.0.1:8080', {
+                method: 'GET'
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('response').innerText = data;
+            })
+            .catch(error => {
+                document.getElementById('response').innerText = `Error: ${error}`;
+            });
+        });
+    </script>
+</body>
+</html>
