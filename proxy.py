@@ -5,6 +5,8 @@ import json
 import ssl
 import threading
 import queue
+import os
+import time
 
 app = Flask(__name__)
 CORS(app)
@@ -44,7 +46,16 @@ def terminate():
     func = request.environ.get('werkzeug.server.shutdown')
     if func is not None:
         func()
-    return jsonify({"message": "Terminating server."})
+    response = jsonify({"message": "Terminating server."})
+    response.status_code = 200
+
+    # 시스템 명령어로 강제 종료를 스레딩하여 응답을 먼저 보냅니다.
+    def shutdown_server():
+        time.sleep(1)  # 클라이언트가 응답을 받을 시간을 줍니다.
+        os._exit(0)
+
+    threading.Thread(target=shutdown_server).start()
+    return response
 
 @app.route('/update', methods=['POST'])
 def update():
