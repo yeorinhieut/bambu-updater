@@ -83,7 +83,7 @@
         };
 
         document.addEventListener('DOMContentLoaded', (event) => {
-            pingInterval = setInterval(checkProxy, 500);
+            pingInterval = setInterval(checkProxy, 1500);
         });
 
         document.getElementById('update-button').addEventListener('click', function() {
@@ -103,11 +103,6 @@
             .then(data => {
                 const consoleDiv = document.getElementById('console');
                 consoleDiv.innerHTML += `Response: ${JSON.stringify(data)}<br>`;
-
-                const eventSource = new EventSource('http://127.0.0.1:1883/stream');
-                eventSource.onmessage = function(event) {
-                    consoleDiv.innerHTML += `Received: ${event.data}<br>`;
-                };
             })
             .catch(error => {
                 const consoleDiv = document.getElementById('console');
