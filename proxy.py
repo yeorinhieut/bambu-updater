@@ -13,17 +13,17 @@ CORS(app)
 
 mqtt_messages = queue.Queue()  # MQTT 메시지를 저장할 큐
 shutdown_event = threading.Event()  # 종료 이벤트
+mqtt_client = None  # 전역 MQTT 클라이언트
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("MQTT 연결 성공")
-        client.publish(userdata['topic'], json.dumps(userdata['payload']))
+        client.subscribe(userdata['topic'])  # 구독 유지
     else:
         print(f"MQTT 연결 실패, 코드: {rc}")
 
 def on_publish(client, userdata, mid):
     print("펌웨어 업데이트 요청이 성공적으로 전송되었습니다.")
-    client.disconnect()
 
 def on_message(client, userdata, msg):
     message = msg.payload.decode()
@@ -35,6 +35,22 @@ def on_log(client, userdata, level, buf):
     print(log_message)
     mqtt_messages.put(log_message)
 
+def initialize_mqtt_client(mqtt_broker, mqtt_port, mqtt_username, mqtt_password, mqtt_topic):
+    global mqtt_client
+    if mqtt_client is None:
+        mqtt_client = mqtt.Client(userdata={'topic': mqtt_topic, 'payload': None}, protocol=mqtt.MQTTv311)
+        mqtt_client.username_pw_set(mqtt_username, mqtt_password)
+        mqtt_client.tls_set(cert_reqs=ssl.CERT_NONE)
+        mqtt_client.tls_insecure_set(True)
+
+        mqtt_client.on_connect = on_connect
+        mqtt_client.on_publish = on_publish
+        mqtt_client.on_message = on_message
+        mqtt_client.on_log = on_log
+
+        mqtt_client.connect(mqtt_broker, mqtt_port, 60)
+        mqtt_client.loop_start()
+
 @app.route('/ping', methods=['GET'])
 def ping():
     return jsonify({"message": "pong"})
@@ -43,6 +59,8 @@ def ping():
 def terminate():
     print("Terminating proxy server.")
     shutdown_event.set()
+    if mqtt_client:
+        mqtt_client.disconnect()
     func = request.environ.get('werkzeug.server.shutdown')
     if func is not None:
         func()
@@ -71,22 +89,12 @@ def update():
     mqtt_password = access_code
     mqtt_topic = f"device/{device_id}/request"
 
-    # MQTT 클라이언트 설정
-    client = mqtt.Client(userdata={'topic': mqtt_topic, 'payload': payload}, protocol=mqtt.MQTTv311)
-    client.username_pw_set(mqtt_username, mqtt_password)
-    client.tls_set(cert_reqs=ssl.CERT_NONE)
-    client.tls_insecure_set(True)
+    # MQTT 클라이언트 초기화 (이미 초기화되어 있으면 재설정하지 않음)
+    initialize_mqtt_client(mqtt_broker, mqtt_port, mqtt_username, mqtt_password, mqtt_topic)
 
-    client.on_connect = on_connect
-    client.on_publish = on_publish
-    client.on_message = on_message
-    client.on_log = on_log
-
-    # MQTT 브로커에 연결
-    client.connect(mqtt_broker, mqtt_port, 60)
-
-    # 연결 유지 및 메시지 처리 루프 시작
-    client.loop_start()
+    # 펌웨어 업데이트 요청 전송
+    mqtt_client.user_data_set({'topic': mqtt_topic, 'payload': payload})
+    mqtt_client.publish(mqtt_topic, json.dumps(payload))
 
     return jsonify({"message": "Update request sent."})
 
