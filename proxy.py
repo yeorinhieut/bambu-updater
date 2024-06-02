@@ -6,8 +6,7 @@ import paho.mqtt.client as mqtt
 from datetime import datetime, timedelta
 from threading import Thread, Event
 import queue
-import os
-import signal
+import sys
 
 app = Flask(__name__)
 CORS(app)  # 모든 출처에서의 요청 허용
@@ -24,7 +23,7 @@ def start_shutdown_timer():
         if datetime.now() - last_request_time > TIMEOUT:
             print("Shutting down due to inactivity.")
             shutdown_event.set()
-            os.kill(os.getpid(), signal.SIGTERM)
+            sys.exit(0)
         shutdown_event.wait(60)
 
 @app.route('/ping', methods=['GET'])
@@ -36,7 +35,7 @@ def terminate():
     print("Terminating proxy server.")
     shutdown_event.set()
     response = jsonify({"message": "Terminating server."})
-    response.call_on_close(lambda: os.kill(os.getpid(), signal.SIGTERM))
+    response.call_on_close(lambda: sys.exit(0))
     return response
 
 @app.route('/update', methods=['POST'])
