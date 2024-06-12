@@ -39,8 +39,8 @@
             <input type="password" id="access-code" class="mt-1 block w-full p-2 border border-gray-300 rounded">
         </div>
         <div class="mb-3">
-            <label for="payload" class="block text-gray-700">Payload <a href="https://github.com/lunDreame/user-bambulab-firmware/tree/main/assets" class="text-green-500">(List)</a></label>
-            <textarea id="payload" class="mt-1 block w-full p-2 border border-gray-300 rounded"></textarea>
+            <label for="printer-model" class="block text-gray-700">Printer Model</label>
+            <input type="text" id="printer-model" class="mt-1 block w-full p-2 border border-gray-300 rounded" disabled>
         </div>
         <div class="flex space-x-2">
             <button id="update-button" class="bg-green-500 text-white py-2 px-3 rounded w-1/2" style="background-color: #3AB54A;">
@@ -82,22 +82,37 @@
                 });
         };
 
+        const getModel = (sn) => {
+            if (sn.startsWith('00M')) return 'X1C';
+            if (sn.startsWith('00W')) return 'X1';
+            if (sn.startsWith('01S')) return 'P1P';
+            if (sn.startsWith('01P')) return 'P1S';
+            if (sn.startsWith('030')) return 'A1_MINI';
+            if (sn.startsWith('039')) return 'A1';
+            return 'Unknown Model';
+        };
+
         document.addEventListener('DOMContentLoaded', (event) => {
             pingInterval = setInterval(checkProxy, 500);
+
+            document.getElementById('sn').addEventListener('input', (event) => {
+                const model = getModel(event.target.value);
+                document.getElementById('printer-model').value = model;
+            });
         });
 
         document.getElementById('update-button').addEventListener('click', function() {
             const printerIp = document.getElementById('printer-ip').value;
             const sn = document.getElementById('sn').value;
             const accessCode = document.getElementById('access-code').value;
-            const payload = document.getElementById('payload').value;
+            const printerModel = document.getElementById('printer-model').value;
 
             fetch('http://127.0.0.1:1883/update', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ printerIp, sn, accessCode, payload })
+                body: JSON.stringify({ printerIp, sn, accessCode, printerModel })
             })
             .then(response => response.json())
             .then(data => {
