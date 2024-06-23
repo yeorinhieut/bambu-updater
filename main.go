@@ -20,6 +20,8 @@ type UpdateRequest struct {
     PrinterModel string `json:"printerModel"`
 }
 
+var mqttClient mqtt.Client
+
 func main() {
     r := gin.Default()
     r.Use(cors.Default())
@@ -65,10 +67,15 @@ func main() {
         })
         mqttOpts.OnConnect = func(client mqtt.Client) {
             fmt.Println("MQTT connection established")
-            c.JSON(http.StatusOK, gin.H{
-                "message": "MQTT connection established",
-                "payload": payload,
-            })
+
+            // 응답 수신을 위한 주제 구독
+            reportTopic := fmt.Sprintf("device/%s/report", updateReq.DeviceID)
+            if token := client.Subscribe(reportTopic, 0, messagePubHandler); token.Wait() && token.Error() != nil {
+                fmt.Println("Subscription error:", token.Error())
+                c.JSON(http.StatusInternalServerError, gin.H{"message": "Subscription error"})
+                return
+            }
+
             token := client.Publish(fmt.Sprintf("device/%s/request", updateReq.DeviceID), 0, false, payload)
             token.Wait()
             if token.Error() != nil {
@@ -77,14 +84,12 @@ func main() {
                 return
             }
             c.JSON(http.StatusOK, gin.H{"message": "Update request sent."})
-            client.Disconnect(250)
         }
         mqttOpts.OnConnectionLost = func(client mqtt.Client, err error) {
             fmt.Printf("Connection lost: %v", err)
-            c.JSON(http.StatusInternalServerError, gin.H{"message": fmt.Sprintf("Connection lost: %v", err)})
         }
 
-        mqttClient := mqtt.NewClient(mqttOpts)
+        mqttClient = mqtt.NewClient(mqttOpts)
         if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
             fmt.Println(token.Error())
             c.JSON(http.StatusInternalServerError, gin.H{"message": "MQTT connection failed"})
@@ -93,6 +98,10 @@ func main() {
     })
 
     r.Run("0.0.0.0:1883")
+}
+
+func messagePubHandler(client mqtt.Client, msg mqtt.Message) {
+    fmt.Printf("Received message: %s from topic: %s\n", msg.Payload(), msg.Topic())
 }
 
 func getPayload(modelName string) (string, error) {
