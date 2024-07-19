@@ -11,15 +11,22 @@
             font-family: 'Raleway', sans-serif;
         }
         .text-smaller {
-            font-size: 0.875rem; /* 약간 작은 폰트 크기 */
+            font-size: 0.875rem;
         }
         #modal {
             display: flex;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
             align-items: center;
             justify-content: center;
         }
-        .hidden {
-            display: none;
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            max-width: 600px;
+            width: 100%;
         }
     </style>
 </head>
@@ -56,35 +63,32 @@
         <div id="console" class="h-40 bg-gray-100 p-2 overflow-y-scroll border border-gray-300 rounded text-xs"></div>
     </div>
 
-    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50">
-        <div class="bg-white p-5 rounded shadow-md text-center max-w-sm mx-auto text-smaller">
-            <p class="text-base font-semibold mb-4">Please download and run the proxy</p>
-            <button id="downloadBtn" class="bg-green-500 text-white py-2 px-4 rounded">Download Proxy</button>
-        </div>
-    </div>
-
-    <div id="instructionsModal">
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
         <div class="modal-content text-smaller">
-            <h2 class="text-lg font-semibold mb-4">Proxy Installation Instructions</h2>
-            <h3 class="font-semibold mt-4">Windows:</h3>
-            <ol class="list-decimal list-inside mb-4">
-                <li>Run the downloaded file.</li>
-                <li>If a SmartScreen window appears, click on "More info" and then "Run anyway".</li>
-            </ol>
-            <h3 class="font-semibold mt-4">macOS:</h3>
-            <p class="mb-2">Choose the appropriate version (x86/arm) and follow these steps:</p>
-            <ol class="list-decimal list-inside mb-4">
-                <li>Open Terminal</li>
-                <li>Navigate to the download directory</li>
-                <li>Run the following commands:</li>
-            </ol>
-            <pre class="bg-gray-100 p-2 rounded">
+            <h2 class="text-xl font-semibold mb-4">Proxy Download and Installation Instructions</h2>
+            <div class="mb-6">
+                <h3 class="font-semibold mt-4">Windows:</h3>
+                <ol class="list-decimal list-inside mb-4 ml-4">
+                    <li>Download the proxy using the button below.</li>
+                    <li>Run the downloaded file.</li>
+                    <li>If a SmartScreen window appears, click on "More info" and then "Run anyway".</li>
+                </ol>
+                <h3 class="font-semibold mt-4">macOS:</h3>
+                <p class="mb-2">Choose the appropriate version (x86/arm) and follow these steps:</p>
+                <ol class="list-decimal list-inside mb-4 ml-4">
+                    <li>Download the proxy using the button below.</li>
+                    <li>Open Terminal</li>
+                    <li>Navigate to the download directory</li>
+                    <li>Run the following commands:</li>
+                </ol>
+                <pre class="bg-gray-100 p-2 rounded mb-2">
 xattr -d com.apple.quarantine bambu-updater-macos-x86  # Remove quarantine
 chmod +x ./bambu-updater-macos-x86  # Add execute permission
 ./bambu-updater-macos-x86  # Run the proxy
-            </pre>
-            <p class="mt-4">Note: Replace "x86" with "arm" if you're using an ARM-based Mac.</p>
-            <button id="closeInstructionsBtn" class="mt-4 bg-blue-500 text-white py-2 px-4 rounded">Close</button>
+                </pre>
+                <p class="mb-4">Note: Replace "x86" with "arm" if you're using an ARM-based Mac.</p>
+            </div>
+            <button id="downloadBtn" class="bg-green-500 text-white py-2 px-4 rounded w-full">Download Proxy</button>
         </div>
     </div>
 
@@ -124,14 +128,7 @@ chmod +x ./bambu-updater-macos-x86  # Add execute permission
             });
 
             document.getElementById('downloadBtn').addEventListener('click', () => {
-                // Start the download
                 window.location.href = './bambu-proxy.zip';
-                // Show the instructions modal
-                document.getElementById('instructionsModal').style.display = 'flex';
-            });
-
-            document.getElementById('closeInstructionsBtn').addEventListener('click', () => {
-                document.getElementById('instructionsModal').style.display = 'none';
             });
         });
 
