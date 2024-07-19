@@ -58,7 +58,33 @@
 
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50">
         <div class="bg-white p-5 rounded shadow-md text-center max-w-sm mx-auto text-smaller">
-            <p class="text-base font-semibold">Please download and run <a href="./bambu-proxy.zip" class="text-green-500">proxy</a></p>
+            <p class="text-base font-semibold mb-4">Please download and run the proxy</p>
+            <button id="downloadBtn" class="bg-green-500 text-white py-2 px-4 rounded">Download Proxy</button>
+        </div>
+    </div>
+
+    <div id="instructionsModal">
+        <div class="modal-content text-smaller">
+            <h2 class="text-lg font-semibold mb-4">Proxy Installation Instructions</h2>
+            <h3 class="font-semibold mt-4">Windows:</h3>
+            <ol class="list-decimal list-inside mb-4">
+                <li>Run the downloaded file.</li>
+                <li>If a SmartScreen window appears, click on "More info" and then "Run anyway".</li>
+            </ol>
+            <h3 class="font-semibold mt-4">macOS:</h3>
+            <p class="mb-2">Choose the appropriate version (x86/arm) and follow these steps:</p>
+            <ol class="list-decimal list-inside mb-4">
+                <li>Open Terminal</li>
+                <li>Navigate to the download directory</li>
+                <li>Run the following commands:</li>
+            </ol>
+            <pre class="bg-gray-100 p-2 rounded">
+xattr -d com.apple.quarantine bambu-updater-macos-x86  # Remove quarantine
+chmod +x ./bambu-updater-macos-x86  # Add execute permission
+./bambu-updater-macos-x86  # Run the proxy
+            </pre>
+            <p class="mt-4">Note: Replace "x86" with "arm" if you're using an ARM-based Mac.</p>
+            <button id="closeInstructionsBtn" class="mt-4 bg-blue-500 text-white py-2 px-4 rounded">Close</button>
         </div>
     </div>
 
@@ -70,10 +96,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.message === 'pong') {
-                        const modal = document.getElementById('modal');
-                        if (modal) {
-                            modal.remove();
-                        }
+                        document.getElementById('modal').style.display = 'none';
                         clearInterval(pingInterval);
                     }
                 })
@@ -98,6 +121,17 @@
             document.getElementById('sn').addEventListener('input', (event) => {
                 const model = getModel(event.target.value);
                 document.getElementById('printer-model').value = model;
+            });
+
+            document.getElementById('downloadBtn').addEventListener('click', () => {
+                // Start the download
+                window.location.href = './bambu-proxy.zip';
+                // Show the instructions modal
+                document.getElementById('instructionsModal').style.display = 'flex';
+            });
+
+            document.getElementById('closeInstructionsBtn').addEventListener('click', () => {
+                document.getElementById('instructionsModal').style.display = 'none';
             });
         });
 
